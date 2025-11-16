@@ -1,0 +1,91 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase
+# Archivos de configuración de Firebase (contienen claves sensibles)
+firebase.json
+.firebaserc
+google-services.json
+firebase_options.dart
+
+# API Keys y credenciales sensibles
+# IMPORTANTE: Nunca commitear claves API reales
+*.env
+.env
+.env.*
+secrets.dart
+api_keys.dart
+
+# Archivos de configuración local
+local.properties
+keystore.properties
+key.properties
+
+# Archivos de desarrollo
+devtools_options.yaml
+
+# Archivos de depuración
+*.g.dart.map
+*.freezed.dart.map
+
+# Archivos temporales de Flutter
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Archivos de análisis
+.dart_tool/
+analysis_options.yaml.bak
+
+# Coverage
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+*.log.*

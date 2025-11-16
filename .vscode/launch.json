@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter (Android)",
+      "type": "dart",
+      "request": "launch",
+      "flutterMode": "debug",
+      "deviceId": "Medium_Phone_API_36.0",
+      "preLaunchTask": "start-android-emulator"
+    }
+  ]
+}
