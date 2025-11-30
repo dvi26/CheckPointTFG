@@ -226,7 +226,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
-  @override  @override
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;

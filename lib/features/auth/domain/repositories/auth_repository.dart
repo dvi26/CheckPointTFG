@@ -26,8 +26,15 @@ abstract class AuthRepository {
   Future<AuthUser> signUp({
     required String email,
     required String password,
+    String? displayName,
   });
 
   /// Cierra la sesión del usuario actual.
   Future<void> signOut();
+
+  /// Actualiza el nombre para mostrar del usuario actual.
+  /// 
+  /// Retorna void si todo va bien.
+  /// Lanza excepción si hay error (ej: usuario no autenticado).
+  Future<void> updateDisplayName(String displayName);
 }

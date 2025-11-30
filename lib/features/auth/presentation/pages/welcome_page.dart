@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:checkpoint/app/router.dart';
+import 'package:checkpoint/app/widgets/widgets.dart';
 
 /// Pantalla de bienvenida.
 ///
@@ -120,7 +121,7 @@ class WelcomePage extends StatelessWidget {
               const SizedBox(height: 16),
 
               /// Botón de iniciar con Google.
-              _GoogleButton(
+              GoogleButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -141,36 +142,3 @@ class WelcomePage extends StatelessWidget {
   }
 }
 
-/// Botón “Continuar con Google”.
-///
-/// Conecta con la autenticación de Google.
-class _GoogleButton extends StatelessWidget {
-  const _GoogleButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(
-          Icons.account_circle,
-          color: cs.onSurface,
-        ),
-        label: const Text('Continuar con Google'),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFF262732)),
-          foregroundColor: const Color(0xFFB7BAC4),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-      ),
-    );
-  }
-}

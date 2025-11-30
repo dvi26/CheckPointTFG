@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/api/igdb_client.dart';
+import '../../../../core/utils/platform_mapper.dart';
 import '../../domain/entities/game.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../models/game_model.dart';
@@ -7,29 +9,31 @@ import '../models/game_model.dart';
 /// Implementación del repositorio de juegos usando IGDB API
 class GameRepositoryImpl implements GameRepository {
   final IgdbClient _client;
+  
+  // Claves para SharedPreferences
+  static const String _platformsCacheKey = 'igdb_platforms_data';
+  static const String _platformsTimestampKey = 'igdb_platforms_timestamp';
+  // Duración del caché de plataformas (30 días)
+  static const Duration _cacheDuration = Duration(days: 30);
 
-  // Diccionario que guarda los géneros en memoria para evitar múltiples llamadas
+  // Diccionarios que guardan géneros y plataformas en memoria
   Map<int, String>? _genreCache;
+  Map<int, String>? _platformCache;
 
   GameRepositoryImpl(this._client);
 
   /// Carga los géneros de juegos desde la API y los guarda en memoria.
   /// Solo se ejecuta la primera vez, las siguientes veces usa el cache.
   Future<void> _loadGenres() async {
-    // Solo cargar si aún no están en memoria
     if (_genreCache == null) {
       try {
-        // Pedir lista de géneros a la API
         final response = await _client.post(
           'genres',
           'fields name; limit 100;',
         );
 
-        // Convertir respuesta JSON a lista
         final List<dynamic> data = json.decode(response.body);
         
-        // Crear diccionario: {id: nombre}
-        // Ejemplo: {1: "Action", 2: "RPG", 3: "Adventure"}
         final Map<int, String> genreMap = {};
         for (var genre in data) {
           final int id = genre['id'] as int;
@@ -39,24 +43,103 @@ class GameRepositoryImpl implements GameRepository {
         
         _genreCache = genreMap;
       } catch (e) {
-        // Si falla, crear diccionario vacío para no intentar de nuevo
         _genreCache = {};
-        // print('⚠️ Error cargando géneros: $e');
       }
     }
   }
 
+  /// Carga las plataformas con estrategia cache-first usando SharedPreferences.
+  /// 
+  /// 1. Intenta cargar desde SharedPreferences.
+  /// 2. Si hay datos y no han expirado, usa el caché local.
+  /// 3. Si no hay datos o expiraron, descarga de la API y actualiza el caché.
+  Future<void> _loadPlatforms({bool forceReload = false}) async {
+    // Si ya tenemos caché en memoria y no forzamos recarga, terminamos.
+    if (_platformCache != null && !forceReload) {
+      return;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Intentar cargar desde SharedPreferences si no forzamos recarga
+      if (!forceReload) {
+        final cachedData = prefs.getString(_platformsCacheKey);
+        final timestamp = prefs.getInt(_platformsTimestampKey);
+
+        if (cachedData != null && timestamp != null) {
+          final cachedDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+          final now = DateTime.now();
+
+          // Verificar si el caché es válido (menos de 30 días)
+          if (now.difference(cachedDate) < _cacheDuration) {
+            final Map<String, dynamic> decodedMap = json.decode(cachedData);
+            _platformCache = decodedMap.map((key, value) => MapEntry(int.parse(key), value as String));
+            
+            // Actualizar el PlatformMapper con los datos cacheados
+            PlatformMapper.updatePlatforms(_platformCache!);
+            return;
+          }
+        }
+      }
+
+      // Si llegamos aquí, necesitamos cargar desde la API (cache expirado, inexistente o forceReload)
+      
+      // Obtener TODAS las plataformas disponibles en IGDB (máximo 500 según límite de IGDB)
+      final response = await _client.post(
+        'platforms',
+        'fields id, name; limit 500;',
+      );
+
+      final List<dynamic> data = json.decode(response.body);
+      
+      final Map<int, String> platformMap = {};
+      for (var platform in data) {
+        final int id = platform['id'] as int;
+        final String name = platform['name'] as String;
+        platformMap[id] = name;
+      }
+      
+      _platformCache = platformMap;
+
+      // Guardar en SharedPreferences
+      // Convertimos las keys int a String para poder serializar a JSON
+      final jsonMap = platformMap.map((key, value) => MapEntry(key.toString(), value));
+      await prefs.setString(_platformsCacheKey, json.encode(jsonMap));
+      await prefs.setInt(_platformsTimestampKey, DateTime.now().millisecondsSinceEpoch);
+      
+      // Actualizar el PlatformMapper con los nuevos datos
+      PlatformMapper.updatePlatforms(_platformCache!);
+
+    } catch (e) {
+      // Si falla la API y no teníamos caché, inicializamos vacío para no romper la app
+      _platformCache ??= {};
+      // Log error o manejar silenciosamente
+      print('Error cargando plataformas: $e');
+    }
+  }
+
+  /// Carga géneros y plataformas en paralelo
+  Future<void> _loadCaches({bool forceReloadPlatforms = false}) async {
+    await Future.wait([
+      _loadGenres(),
+      _loadPlatforms(forceReload: forceReloadPlatforms),
+    ]);
+  }
+
   @override
   Future<List<Game>> getPopularGames({int limit = 10}) async {
-    await _loadGenres();
+    await _loadCaches();
 
-    // Timestamp de hace 6 meses (juegos populares ahora mismo)
     final sixMonthsAgo = DateTime.now().subtract(const Duration(days: 180));
     final timestamp = (sixMonthsAgo.millisecondsSinceEpoch / 1000).round();
 
-    // Query IGDB: juegos con más hype de los últimos 6 meses
     final query = '''
-      fields name, rating, cover.image_id, genres, first_release_date, summary;
+      fields name, rating, rating_count, cover.image_id, genres, platforms, 
+             first_release_date, summary, storyline,
+             involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
+             websites.type, websites.url,
+             screenshots.image_id;
       where first_release_date >= $timestamp & hypes > 30 & cover != null;
       sort hypes desc;
       limit $limit;
@@ -65,14 +148,15 @@ class GameRepositoryImpl implements GameRepository {
     final response = await _client.post('games', query);
     final List<dynamic> data = json.decode(response.body);
 
-    // Evitar juegos duplicados por nombre
     final seenNames = <String>{};
     final games = <Game>[];
     
     for (var gameJson in data) {
-      final game = GameModel.fromJson(gameJson).toEntity(genreMap: _genreCache);
+      final game = GameModel.fromJson(gameJson).toEntity(
+        genreMap: _genreCache,
+        platformMap: _platformCache,
+      );
       
-      // Solo agregar si no hemos visto este nombre antes
       final nameLower = game.name.toLowerCase();
       if (!seenNames.contains(nameLower)) {
         seenNames.add(nameLower);
@@ -80,18 +164,20 @@ class GameRepositoryImpl implements GameRepository {
       }
     }
 
-    // print('✅ Cargados ${games.length} juegos populares'); 
     return games;
   }
 
   @override
   Future<List<Game>> searchGames(String query, {int limit = 10}) async {
-    await _loadGenres();
+    await _loadCaches();
 
-    // Query IGDB: búsqueda por nombre
     final igdbQuery = '''
       search "$query";
-      fields name, rating, cover.image_id, genres, first_release_date, summary;
+      fields name, rating, rating_count, cover.image_id, genres, platforms,
+             first_release_date, summary, storyline,
+             involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
+             websites.type, websites.url,
+             screenshots.image_id;
       where cover != null;
       limit $limit;
     ''';
@@ -100,16 +186,23 @@ class GameRepositoryImpl implements GameRepository {
     final List<dynamic> data = json.decode(response.body);
 
     return data
-        .map((json) => GameModel.fromJson(json).toEntity(genreMap: _genreCache))
+        .map((json) => GameModel.fromJson(json).toEntity(
+              genreMap: _genreCache,
+              platformMap: _platformCache,
+            ))
         .toList();
   }
 
   @override
   Future<Game?> getGameById(int id) async {
-    await _loadGenres();
+    await _loadCaches();
 
     final query = '''
-      fields name, rating, cover.image_id, genres, first_release_date, summary;
+      fields name, rating, rating_count, cover.image_id, genres, platforms,
+             first_release_date, summary, storyline,
+             involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
+             websites.type, websites.url,
+             screenshots.image_id;
       where id = $id;
     ''';
 
@@ -120,6 +213,9 @@ class GameRepositoryImpl implements GameRepository {
       return null;
     }
 
-    return GameModel.fromJson(data.first).toEntity(genreMap: _genreCache);
+    return GameModel.fromJson(data.first).toEntity(
+      genreMap: _genreCache,
+      platformMap: _platformCache,
+    );
   }
 }

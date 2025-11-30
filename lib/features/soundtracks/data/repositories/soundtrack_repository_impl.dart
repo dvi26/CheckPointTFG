@@ -56,11 +56,9 @@ class SoundtrackRepositoryImpl implements SoundtrackRepository {
 
       // Asignar resultados si todo fue bien
       result = allSoundtracks;
-      // print('✅ Cargados ${result.length} soundtracks populares (Spotify)');
       
     } catch (e) {
       // En caso de error, result ya está inicializado como lista vacía
-      // print('❌ Error obteniendo soundtracks populares: $e');
     }
     
     return result;
@@ -116,7 +114,27 @@ class SoundtrackRepositoryImpl implements SoundtrackRepository {
       
     } catch (e) {
       // En caso de error, result ya está inicializado como lista vacía
-      // print('❌ Error obteniendo soundtracks del juego $gameId: $e');
+    }
+    
+    return result;
+  }
+
+  @override
+  Future<Soundtrack?> getSoundtrackById(
+    String spotifyId, {
+    String? gameName,
+    int? gameId,
+  }) async {
+    Soundtrack? result;
+    
+    try {
+      result = await _spotifyRepository.getSoundtrackById(
+        spotifyId,
+        gameName: gameName,
+        gameId: gameId,
+      );
+    } catch (e) {
+      // En caso de error, result queda como null
     }
     
     return result;

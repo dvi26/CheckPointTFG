@@ -7,4 +7,7 @@ abstract class SoundtrackRepository {
   
   /// Obtiene soundtracks de un juego específico
   Future<List<Soundtrack>> getSoundtracksByGameId(int gameId);
+  
+  /// Obtiene un soundtrack completo por su ID de Spotify
+  Future<Soundtrack?> getSoundtrackById(String spotifyId, {String? gameName, int? gameId});
 }

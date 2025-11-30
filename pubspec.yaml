@@ -1,5 +1,5 @@
 name: checkpoint
-description: "Aplicación multiplataforma que permite descubrir, valorar y comentar videojuegos
+description: "Aplicación que permite descubrir, valorar y comentar videojuegos
   y sus bandas sonoras."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -49,6 +49,9 @@ dependencies:
   
   # Caché de imágenes
   cached_network_image: ^3.3.1
+  
+  # Para abrir enlaces externos
+  url_launcher: ^6.3.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

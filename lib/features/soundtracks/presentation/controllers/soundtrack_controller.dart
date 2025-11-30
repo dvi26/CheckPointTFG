@@ -10,12 +10,18 @@ class SoundtrackController extends ChangeNotifier {
   SoundtrackController(this._repository);
 
   List<Soundtrack> _popularSoundtracks = [];
+  Soundtrack? _selectedSoundtrack;
   bool _isLoading = false;
   String _error = '';
 
   /// Lista de soundtracks populares cargados.
   List<Soundtrack> get popularSoundtracks {
     return _popularSoundtracks;
+  }
+
+  /// Soundtrack seleccionado para mostrar detalles.
+  Soundtrack? get selectedSoundtrack {
+    return _selectedSoundtrack;
   }
 
   /// Indica si hay una operación en progreso.
@@ -30,6 +36,10 @@ class SoundtrackController extends ChangeNotifier {
 
   /// Carga soundtracks populares
   Future<void> loadPopularSoundtracks() async {
+    // Si ya hay datos cargados, evitamos volver a llamar a la API
+    // para ahorrar recursos y mejorar la experiencia de usuario.
+    if (_popularSoundtracks.isNotEmpty) return;
+
     _setLoading(true);
     _error = '';
 
@@ -39,6 +49,31 @@ class SoundtrackController extends ChangeNotifier {
     } catch (e) {
       _error = 'Error cargando soundtracks: $e';
       // print('❌ $_error'); 
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Carga los detalles completos de un soundtrack por su ID de Spotify
+  Future<void> loadSoundtrackDetails(
+    String spotifyId, {
+    String? gameName,
+    int? gameId,
+  }) async {
+    _setLoading(true);
+    _error = '';
+    _selectedSoundtrack = null;
+
+    try {
+      _selectedSoundtrack = await _repository.getSoundtrackById(
+        spotifyId,
+        gameName: gameName,
+        gameId: gameId,
+      );
+      // print('✅ Cargado soundtrack: ${_selectedSoundtrack?.name}');
+    } catch (e) {
+      _error = 'Error cargando detalles del soundtrack: $e';
+      // print('❌ $_error');
     } finally {
       _setLoading(false);
     }

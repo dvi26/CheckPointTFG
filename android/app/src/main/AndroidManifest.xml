@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">   
   <!-- package="com.checkpoint.app" -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="checkpoint"
         android:name="${applicationName}"
@@ -41,6 +43,15 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Permite abrir URLs HTTP/HTTPS en navegadores externos -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
         </intent>
     </queries>
 </manifest>

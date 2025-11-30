@@ -23,7 +23,7 @@ class App extends StatelessWidget {
   
   final String initialRoute;
 
-/// Construye el árbol de widgets de nivel superior.
+  /// Construye el árbol de widgets de nivel superior.
   @override
   Widget build(BuildContext context) {
     // Crear repositorio de autenticación (Firebase)

@@ -11,6 +11,7 @@ class GameController extends ChangeNotifier {
 
   List<Game> _popularGames = [];
   List<Game> _searchResults = [];
+  Game? _selectedGame;
   bool _isLoading = false;
   String _error = '';
 
@@ -22,6 +23,11 @@ class GameController extends ChangeNotifier {
   /// Resultados de la búsqueda de juegos.
   List<Game> get searchResults {
     return _searchResults;
+  }
+
+  /// Juego seleccionado para mostrar detalles.
+  Game? get selectedGame {
+    return _selectedGame;
   }
 
   /// Indica si hay una operación en progreso.
@@ -36,6 +42,10 @@ class GameController extends ChangeNotifier {
 
   /// Carga juegos populares
   Future<void> loadPopularGames() async {
+    // Si ya hay datos cargados, evitamos volver a llamar a la API
+    // para ahorrar recursos y mejorar la experiencia de usuario.
+    if (_popularGames.isNotEmpty) return;
+
     _setLoading(true);
     _error = '';
 
@@ -44,7 +54,7 @@ class GameController extends ChangeNotifier {
       // print('✅ Cargados ${_popularGames.length} juegos populares'); 
     } catch (e) {
       _error = 'Error cargando juegos: $e';
-      // print('❌ $_error'); 
+      //print('❌ $_error'); 
     } finally {
       _setLoading(false);
     }
@@ -66,6 +76,23 @@ class GameController extends ChangeNotifier {
       // print('✅ Encontrados ${_searchResults.length} juegos para "$query"'); 
     } catch (e) {
       _error = 'Error buscando juegos: $e';
+      // print('❌ $_error');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Carga los detalles completos de un juego por su ID
+  Future<void> loadGameDetails(int gameId) async {
+    _setLoading(true);
+    _error = '';
+    _selectedGame = null;
+
+    try {
+      _selectedGame = await _repository.getGameById(gameId);
+      // print('✅ Cargado juego: ${_selectedGame?.name}');
+    } catch (e) {
+      _error = 'Error cargando detalles del juego: $e';
       // print('❌ $_error');
     } finally {
       _setLoading(false);

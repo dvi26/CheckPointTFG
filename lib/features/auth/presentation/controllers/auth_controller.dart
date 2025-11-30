@@ -56,13 +56,17 @@ class AuthController extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      await _authRepository.signUp(email: email, password: password);
-      // TODO: Actualizar displayName cuando AuthUser tenga método para eso
-      // Por ahora Firebase actualiza automáticamente al crear usuario
+      // Crear el usuario en Firebase con el displayName
+      await _authRepository.signUp(
+        email: email,
+        password: password,
+        displayName: name.trim().isNotEmpty ? name.trim() : null,
+      );
+      
       _error = ''; 
     } on FirebaseAuthException catch (e) {
       _error = _authErrorController(e);
-    } catch (_) {
+    } catch (e) {
       _error = 'Error inesperado. Inténtalo de nuevo.';
     } finally {
       _setLoading(false);
@@ -96,37 +100,37 @@ class AuthController extends ChangeNotifier {
   }
 
   String _authErrorController(FirebaseAuthException e) {
-  String message;
-  switch (e.code) {
-    case 'invalid-email':
-      message = 'Email no válido.';
-      break;
-    case 'user-disabled':
-      message = 'Usuario deshabilitado.';
-      break;
-    case 'user-not-found':
-      message = 'Usuario no encontrado.';
+    String message;
+    switch (e.code) {
+      case 'invalid-email':
+        message = 'Email no válido.';
         break;
-    case 'wrong-password':
-      message = 'Email o contraseña incorrectos.';
-      break;
-    case 'weak-password':
-      message = 'Contraseña demasiado débil.';
-      break;
-    case 'email-already-in-use':
-      message = 'Este email ya está registrado.';
-      break;
-    case 'operation-not-allowed':
-      message = 'Operación no permitida en el proyecto.';
-      break;
-    case 'too-many-requests':
-      message = 'Demasiados intentos. Prueba más tarde.';
-      break;
-    default:
-      message = 'Error: ${e.code}.';
+      case 'user-disabled':
+        message = 'Usuario deshabilitado.';
+        break;
+      case 'user-not-found':
+        message = 'Usuario no encontrado.';
+        break;
+      case 'wrong-password':
+        message = 'Email o contraseña incorrectos.';
+        break;
+      case 'weak-password':
+        message = 'Contraseña demasiado débil.';
+        break;
+      case 'email-already-in-use':
+        message = 'Este email ya está registrado.';
+        break;
+      case 'operation-not-allowed':
+        message = 'Operación no permitida en el proyecto.';
+        break;
+      case 'too-many-requests':
+        message = 'Demasiados intentos. Prueba más tarde.';
+        break;
+      default:
+        message = 'Error: ${e.code}.';
+    }
+    return message;
   }
-  return message;
-}
 
 /// Emite eventos cada vez que cambia el estado de autenticación.
   /// 

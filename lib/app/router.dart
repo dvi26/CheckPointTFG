@@ -1,6 +1,8 @@
 import 'package:checkpoint/features/auth/presentation/pages/login_page.dart';
 import 'package:checkpoint/features/auth/presentation/pages/register_page.dart';
 import 'package:checkpoint/features/home/presentation/pages/home_page.dart';
+import 'package:checkpoint/features/games/presentation/pages/game_detail_page.dart';
+import 'package:checkpoint/features/soundtracks/presentation/pages/soundtrack_detail_page.dart';
 import 'package:flutter/material.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 
@@ -11,6 +13,8 @@ final class AppRouter {
   static const login = '/login';
   static const register = '/register';
   static const home = '/home';
+  static const gameDetail = '/game-detail';
+  static const soundtrackDetail = '/soundtrack-detail';
 
   /// Crea la ruta según [RouteSettings.name].
   ///
@@ -34,6 +38,35 @@ final class AppRouter {
 
       case home:
         page = const HomePage();
+        break;
+
+      case gameDetail:
+        // Extraer el gameId de los argumentos
+        final args = settings.arguments;
+        if (args is int) {
+          page = GameDetailPage(gameId: args);
+        } else {
+          return _unknownRoute(settings);
+        }
+        break;
+
+      case soundtrackDetail:
+        // Extraer los argumentos del soundtrack
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          final spotifyId = args['spotifyId'] as String?;
+          if (spotifyId != null) {
+            page = SoundtrackDetailPage(
+              spotifyId: spotifyId,
+              gameName: args['gameName'] as String?,
+              gameId: args['gameId'] as int?,
+            );
+          } else {
+            return _unknownRoute(settings);
+          }
+        } else {
+          return _unknownRoute(settings);
+        }
         break;
 
       default:

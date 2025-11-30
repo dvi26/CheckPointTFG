@@ -59,6 +59,7 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<AuthUser> signUp({
     required String email,
     required String password,
+    String? displayName,
   }) async {
     AuthUser result;
     
@@ -73,6 +74,13 @@ class FirebaseAuthRepository implements AuthRepository {
       throw Exception('Error al crear cuenta: usuario no creado');
     }
 
+    if (displayName != null && displayName.trim().isNotEmpty) {
+      await credential.user!.updateDisplayName(displayName.trim());
+      // Recargar el usuario para que los cambios se reflejen
+      await credential.user!.reload();
+    }
+
+    // Convertir a nuestra entidad (después de actualizar displayName)
     result = _userFromFirebase(credential.user!);
     
     return result;
@@ -81,6 +89,23 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
+  }
+
+  @override
+  Future<void> updateDisplayName(String displayName) async {
+    // Obtener el usuario actual de Firebase
+    final currentUser = _firebaseAuth.currentUser;
+    
+    // Verificar que hay un usuario autenticado
+    if (currentUser == null) {
+      throw Exception('No hay usuario autenticado para actualizar el nombre');
+    }
+    
+    // Actualizar el displayName en Firebase
+    await currentUser.updateDisplayName(displayName);
+    
+    // Recargar el usuario para que los cambios se reflejen
+    await currentUser.reload();
   }
 
   AuthUser _userFromFirebase(User firebaseUser) {

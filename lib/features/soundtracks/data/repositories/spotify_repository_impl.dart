@@ -100,11 +100,9 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
       
       // Asignar resultados si todo fue bien
       result = soundtracks;
-      // print('✅ Spotify: Encontrados ${result.length} soundtracks (filtrados)');
       
     } catch (e) {
       // En caso de error, result ya está inicializado como lista vacía
-      // print('❌ Error buscando soundtracks en Spotify: $e');
     }
     
     return result;
@@ -172,7 +170,6 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
                 // Asignar resultado y marcar como encontrado
                 result = model.toEntity();
                 found = true;
-                // print('✅ Spotify: Encontrado OST para "$gameName": ${item.name}');
                 break;
               }
             }
@@ -180,13 +177,39 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
         }
       }
       
-      if (result == null) {
-        // print('⚠️ Spotify: No se encontró OST para "$gameName"');
-      }
+    } catch (e) {
+      // En caso de error, result ya está en null
+    }
+    
+    return result;
+  }
+
+  @override
+  /// Obtiene un álbum completo de Spotify con toda la información detallada
+  Future<Soundtrack?> getSoundtrackById(
+    String spotifyId, {
+    String? gameName,
+    int? gameId,
+  }) async {
+    Soundtrack? result;
+    
+    try {
+      final spotifyApi = await SpotifyClientService.getClient();
+      
+      // Obtener álbum completo (no AlbumSimple)
+      final album = await spotifyApi.albums.get(spotifyId);
+      
+      // Crear modelo con información completa del álbum
+      final model = SpotifySoundtrackModel(
+        album: album,
+        gameName: gameName,
+        gameId: gameId,
+      );
+      
+      result = model.toEntity();
       
     } catch (e) {
       // En caso de error, result ya está en null
-      // print('❌ Error buscando OST de "$gameName": $e');
     }
     
     return result;
