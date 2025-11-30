@@ -128,7 +128,7 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
-  Future<List<Game>> getPopularGames({int limit = 10}) async {
+  Future<List<Game>> getPopularGames({int limit = 20, int offset = 0}) async {
     await _loadCaches();
 
     final sixMonthsAgo = DateTime.now().subtract(const Duration(days: 180));
@@ -143,6 +143,7 @@ class GameRepositoryImpl implements GameRepository {
       where first_release_date >= $timestamp & hypes > 30 & cover != null;
       sort hypes desc;
       limit $limit;
+      offset $offset;
     ''';
 
     final response = await _client.post('games', query);
@@ -168,7 +169,7 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
-  Future<List<Game>> searchGames(String query, {int limit = 10}) async {
+  Future<List<Game>> searchGames(String query, {int limit = 20, int offset = 0}) async {
     await _loadCaches();
 
     final igdbQuery = '''
@@ -180,6 +181,7 @@ class GameRepositoryImpl implements GameRepository {
              screenshots.image_id;
       where cover != null;
       limit $limit;
+      offset $offset;
     ''';
 
     final response = await _client.post('games', igdbQuery);

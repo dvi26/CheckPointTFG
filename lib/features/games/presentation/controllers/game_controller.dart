@@ -15,6 +15,13 @@ class GameController extends ChangeNotifier {
   bool _isLoading = false;
   String _error = '';
 
+  // Paginación y control de búsqueda
+  int _currentSearchRequestId = 0;
+  int _searchOffset = 0;
+  bool _hasMoreResults = true;
+  bool _isLoadingMore = false;
+  String _lastQuery = '';
+
   /// Lista de juegos populares cargados.
   List<Game> get popularGames {
     return _popularGames;
@@ -35,6 +42,16 @@ class GameController extends ChangeNotifier {
     return _isLoading;
   }
 
+  /// Indica si hay más resultados disponibles para cargar.
+  bool get hasSearchResults {
+    return _searchResults.isNotEmpty;
+  }
+
+  /// Indica si se están cargando más resultados.
+  bool get isLoadingMore{
+    return _isLoadingMore;
+  }
+
   /// Mensaje de error actual, o String vacío si no hay error.
   String get error {
     return _error;
@@ -50,7 +67,8 @@ class GameController extends ChangeNotifier {
     _error = '';
 
     try {
-      _popularGames = await _repository.getPopularGames(limit: 20);
+      // Usamos el límite por defecto del repositorio
+      _popularGames = await _repository.getPopularGames();
       // print('✅ Cargados ${_popularGames.length} juegos populares'); 
     } catch (e) {
       _error = 'Error cargando juegos: $e';
@@ -60,25 +78,83 @@ class GameController extends ChangeNotifier {
     }
   }
 
-  /// Busca juegos por nombre
+  /// Busca juegos por nombre (primera página)
   Future<void> searchGames(String query) async {
     if (query.trim().isEmpty) {
       _searchResults = [];
+      _lastQuery = '';
       notifyListeners();
       return;
     }
+
+    // Reiniciar estado de paginación
+    _searchOffset = 0;
+    _hasMoreResults = true;
+    _lastQuery = query;
+
+    // Incrementamos el ID para invalidar peticiones anteriores
+    _currentSearchRequestId++;
+    final int requestId = _currentSearchRequestId;
 
     _setLoading(true);
     _error = '';
 
     try {
-      _searchResults = await _repository.searchGames(query, limit: 20);
-      // print('✅ Encontrados ${_searchResults.length} juegos para "$query"'); 
+      final results = await _repository.searchGames(query, offset: 0);
+      
+      // Si esta no es la última petición lanzada, ignoramos el resultado
+      if (requestId != _currentSearchRequestId) {
+        return;
+      }
+      
+      _searchResults = results;
+      
+      // Si recibimos menos del límite (20), no hay más resultados
+      if (results.length < 20) {
+        _hasMoreResults = false;
+      }
     } catch (e) {
-      _error = 'Error buscando juegos: $e';
-      // print('❌ $_error');
+      if (requestId == _currentSearchRequestId) {
+        _error = 'Error buscando juegos: $e';
+      }
     } finally {
-      _setLoading(false);
+      if (requestId == _currentSearchRequestId) {
+        _setLoading(false);
+      }
+    }
+  }
+
+  /// Carga la siguiente página de resultados
+  Future<void> loadMoreSearchResults() async {
+    if (_isLoadingMore || !_hasMoreResults || _lastQuery.isEmpty) return;
+
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      final nextOffset = _searchOffset + 20;
+      final newResults = await _repository.searchGames(
+        _lastQuery, 
+        offset: nextOffset,
+      );
+
+      if (newResults.isEmpty) {
+        _hasMoreResults = false;
+      } else {
+        _searchResults.addAll(newResults);
+        _searchOffset = nextOffset;
+        
+        if (newResults.length < 20) {
+          _hasMoreResults = false;
+        }
+      }
+    } catch (e) {
+      // Si falla la paginación, solo mostramos en consola o un snackbar en UI, 
+      // pero no borramos los resultados existentes.
+      // print('Error cargando más resultados: $e');
+    } finally {
+      _isLoadingMore = false;
+      notifyListeners();
     }
   }
 

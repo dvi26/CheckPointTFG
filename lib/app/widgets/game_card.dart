@@ -12,6 +12,9 @@ class GameCard extends StatelessWidget {
     this.rating,
     this.genres = const [],
     this.year,
+    this.width = 150,
+    this.imageHeight = 150,
+    this.margin = const EdgeInsets.only(right: 16),
   });
   
   final int gameId;
@@ -20,6 +23,9 @@ class GameCard extends StatelessWidget {
   final double? rating;
   final List<String> genres;
   final int? year;
+  final double? width;
+  final double? imageHeight;
+  final EdgeInsetsGeometry? margin;
 
   /// Construye el texto del subtítulo: "Género • Año", "Género", "Año" o ""
   String _buildGameSubtitle(List<String> genres, int? year) {
@@ -49,8 +55,8 @@ class GameCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     
     return Container(
-      width: 150,
-      margin: const EdgeInsets.only(right: 16),
+      width: width,
+      margin: margin,
       child: InkWell(
         onTap: () {
           Navigator.of(context).pushNamed(
@@ -63,7 +69,8 @@ class GameCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 150,
+              height: imageHeight,
+              width: width,
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
@@ -75,8 +82,8 @@ class GameCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       child: CachedNetworkImage(
                         imageUrl: coverUrl!,
-                        width: 150,
-                        height: 150,
+                        width: width,
+                        height: imageHeight,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Center(
                           child: CircularProgressIndicator(
@@ -163,4 +170,3 @@ class GameCard extends StatelessWidget {
     );
   }
 }
-
