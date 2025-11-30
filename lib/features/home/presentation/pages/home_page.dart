@@ -6,6 +6,7 @@ import '../../../auth/domain/entities/user.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../games/presentation/controllers/game_controller.dart';
 import '../../../soundtracks/presentation/controllers/soundtrack_controller.dart';
+import 'search_page.dart';
 
 /// Pantalla principal de la aplicación.
 /// Muestra diferentes secciones según si el usuario está autenticado o es invitado.
@@ -41,7 +42,7 @@ class _HomePageState extends State<HomePage> {
         // Pantallas disponibles según tipo de usuario
         final screens = [
           _FeedScreen(isGuest: isGuest),
-          _SearchScreen(isGuest: isGuest),
+          const SearchPage(),
           if (!isGuest) ...[
             const _LibraryScreen(),
             const _ProfileScreen(),
@@ -330,26 +331,6 @@ class _HorizontalSoundtrackList extends StatelessWidget {
   }
 }
 
-
-/// Pantalla de búsqueda
-class _SearchScreen extends StatelessWidget {
-  const _SearchScreen({required this.isGuest});
-
-  final bool isGuest;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buscar'),
-        automaticallyImplyLeading: false,
-      ),
-      body: const Center(
-        child: Text('Pantalla de búsqueda - Por implementar'),
-      ),
-    );
-  }
-}
 
 /// Pantalla de biblioteca
 class _LibraryScreen extends StatelessWidget {
