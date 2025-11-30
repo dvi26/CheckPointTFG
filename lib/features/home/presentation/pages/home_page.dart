@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../app/router.dart';
+//import '../../../../app/router.dart';
 import '../../../../app/widgets/widgets.dart';
 import '../../../auth/domain/entities/user.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../auth/presentation/pages/profile_page.dart';
 import '../../../games/presentation/controllers/game_controller.dart';
 import '../../../soundtracks/presentation/controllers/soundtrack_controller.dart';
 import 'search_page.dart';
@@ -45,7 +46,7 @@ class _HomePageState extends State<HomePage> {
           const SearchPage(),
           if (!isGuest) ...[
             const _LibraryScreen(),
-            const _ProfileScreen(),
+            const ProfilePage(),
           ],
         ];
 
@@ -55,10 +56,16 @@ class _HomePageState extends State<HomePage> {
         }
 
         return Scaffold(
-          body: screens[_currentIndex],
+          body: IndexedStack(
+            index: _currentIndex,
+            children: screens,
+          ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex,
             onDestinationSelected: (index) {
+              if (_currentIndex == index) return;
+              // Cerrar teclado si está abierto
+              FocusManager.instance.primaryFocus?.unfocus();
               setState(() => _currentIndex = index);
             },
             destinations: [
@@ -346,165 +353,6 @@ class _LibraryScreen extends StatelessWidget {
       body: const Center(
         child: Text('Tus listas y juegos guardados - Por implementar'),
       ),
-    );
-  }
-}
-
-/// Pantalla de perfil con información del usuario
-class _ProfileScreen extends StatelessWidget {
-  const _ProfileScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    final authController = context.watch<AuthController>();
-    
-    return StreamBuilder<AuthUser?>(
-      stream: authController.authStateChanges(),
-      builder: (context, snapshot) {
-        // Mostrar loading mientras se carga el estado
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Perfil'),
-              automaticallyImplyLeading: false,
-            ),
-            body: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        final user = snapshot.data;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Perfil'),
-            automaticallyImplyLeading: false,
-          ),
-          body: user != null
-              ? _UserProfileView(user: user)
-              : const Center(child: Text('Error: No debería llegar aquí')),
-        );
-      },
-    );
-  }
-}
-
-/// Widget para mostrar el perfil de un usuario autenticado
-class _UserProfileView extends StatelessWidget {
-  const _UserProfileView({required this.user});
-
-  final AuthUser user;
-
-  String _getDisplayName(String? displayName) {
-    String name = 'Usuario';
-    
-    bool hasDisplayName = false;
-    if (displayName != null) {
-      hasDisplayName = true;
-    }
-    
-    if (hasDisplayName) {
-      name = displayName!;
-    }
-    
-    return name;
-  }
-
-  String _getEmailOrEmpty(String? email) {
-    String emailText = ''; 
-    
-    bool hasEmail = false;
-    if (email != null) {
-      hasEmail = true;
-    }
-    
-    if (hasEmail) {
-      emailText = email!;
-    }
-    
-    return emailText;
-  }
-
-  Future<void> _signOut(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cerrar sesión'),
-        content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Cerrar sesión'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      final authController = context.read<AuthController>();
-      await authController.signOut();
-      
-      if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRouter.welcome,
-          (route) => false,
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const SizedBox(height: 32),
-        
-        Center(
-          child: Column(
-            children: [
-              Text(
-                _getDisplayName(user.displayName),
-                style: textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _getEmailOrEmpty(user.email),
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 48),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: OutlinedButton.icon(
-            onPressed: () => _signOut(context),
-            icon: const Icon(Icons.logout),
-            label: const Text('Cerrar sesión'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.error,
-              side: BorderSide(color: colorScheme.error),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 24),
-      ],
     );
   }
 }

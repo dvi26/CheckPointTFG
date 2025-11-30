@@ -86,6 +86,19 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> updateDisplayName(String name) async {
+    _error = '';
+    _setLoading(true);
+    
+    try {
+      await _authRepository.updateDisplayName(name.trim());
+    } catch (e) {
+      _error = 'No se pudo actualizar el perfil.';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   /// Limpia el error actual
   void clearError() {
     if (_error.isNotEmpty) {
