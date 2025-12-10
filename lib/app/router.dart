@@ -70,11 +70,8 @@ final class AppRouter {
         break;
 
       default:
-        // Si la ruta no existe, mostrar pantalla de error
         return _unknownRoute(settings);
     }
-    
-    // Crear la ruta con la pantalla correspondiente
     return _page(page, settings);
   }
 

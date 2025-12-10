@@ -20,8 +20,6 @@ class SoundtrackRepositoryImpl implements SoundtrackRepository {
     try {
       // Usar solo Spotify para obtener OSTs populares
       // Spotify ordena automáticamente por popularidad + relevancia
-      
-      // Queries variadas para obtener diversidad de resultados
       final queries = [
         'video game soundtrack',
         'game OST',
@@ -138,5 +136,18 @@ class SoundtrackRepositoryImpl implements SoundtrackRepository {
     }
     
     return result;
+  }
+
+  @override
+  Future<List<Soundtrack>> searchSoundtracks(String query, {int limit = 20, int offset = 0}) async {
+    try {
+      return await _spotifyRepository.searchGameSoundtracks(
+        limit: limit,
+        offset: offset,
+        query: query,
+      );
+    } catch (e) {
+      return [];
+    }
   }
 }

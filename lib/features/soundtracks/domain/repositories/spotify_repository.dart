@@ -7,6 +7,7 @@ abstract class SpotifyRepository {
   /// Filtra compilaciones, playlists y álbumes no oficiales.
   Future<List<Soundtrack>> searchGameSoundtracks({
     int limit = 20,
+    int offset = 0,
     String query = 'video game soundtrack',
   });
 

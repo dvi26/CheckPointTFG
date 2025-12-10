@@ -6,8 +6,6 @@ class PlatformMapper {
   static Map<int, String> _idToName = {};
 
   /// Inicializa o actualiza el mapa de plataformas.
-  /// 
-  /// Este método debe ser llamado desde el repositorio cuando se cargan las plataformas.
   static void updatePlatforms(Map<int, String> platforms) {
     // Si la nueva lista está vacía, no sobrescribimos con nada (mantenemos lo que hubiera)
     // o podríamos decidir limpiar. Asumiremos que si viene algo, actualizamos.
@@ -23,8 +21,6 @@ class PlatformMapper {
     final name = _idToName[platformId];
     
     if (name == null) {
-      // Como fallback temporal podríamos retornar el ID en string para debug
-      // pero mantenemos el comportamiento anterior
       return 'Plataforma desconocida';
     }
     
