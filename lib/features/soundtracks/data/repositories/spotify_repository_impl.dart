@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:spotify/spotify.dart';
 import '../../../../core/api/spotify_client.dart';
 import '../../domain/entities/soundtrack.dart';
@@ -13,6 +15,7 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
   /// Filtra compilaciones, playlists y álbumes no oficiales.
   Future<List<Soundtrack>> searchGameSoundtracks({
     int limit = 20,
+    int offset = 0,
     String query = 'video game soundtrack',
   }) async {
     // Lista que será el resultado final
@@ -21,15 +24,37 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
     try {
       final spotifyApi = await SpotifyClientService.getClient();
       
-      // Buscar álbumes con el query especificado
-      // Pedimos más del límite porque vamos a filtrar muchos resultados
-      final results = await spotifyApi.search
-          .get(query, types: [SearchType.album])
-          .first(limit * 3);
+      // Construir query avanzada para encontrar más resultados relevantes
+      // Buscamos el término junto con palabras clave de OST
+      // Usamos comillas para buscar la frase exacta del usuario si es posible, 
+      // pero a veces es mejor dejarlo abierto.
+      final advancedQuery = '$query (soundtrack OR ost OR score OR game OR music)';
+      final encodedQuery = Uri.encodeComponent(advancedQuery);
+      
+      final searchLimit = 50; // Pedimos el máximo posible por página
+      
+      // Obtener el token de acceso actual
+      final accessToken = await spotifyApi.getCredentials();
+      final token = accessToken.accessToken;
+
+      // Hacer petición HTTP manual
+      final response = await http.get(
+        Uri.parse('https://api.spotify.com/v1/search?q=$encodedQuery&type=album&limit=$searchLimit&offset=$offset'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        return [];
+      }
+
+      final jsonBody = json.decode(response.body);
+      final albumsData = jsonBody['albums']['items'] as List;
       
       final soundtracks = <Soundtrack>[];
       
-      // Palabras clave que indican compilaciones o listas
+      // Palabras clave que indican compilaciones o contenido no oficial
       final excludeKeywords = [
         'best of',
         'greatest hits',
@@ -38,7 +63,6 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
         'top',
         'ultimate',
         'essential',
-        'complete',
         'compilation',
         'hits',
         'epic',
@@ -47,62 +71,55 @@ class SpotifyRepositoryImpl implements SpotifyRepository {
         'masterpieces',
         'classics',
         'anthology',
-        'deluxe',
-        'expanded',
-        'remastered',
-        'anniversary',
-        'special edition',
         'various artists',
-        'vol.',
-        'volume',
-        'part',
+        'karaoke',
+        'tribute',
+        'cover',
+        'remix',
+        'lofi',
+        'lo-fi',
+        'piano version',
+        'metal version',
+        '8-bit',
       ];
       
-      // Procesar cada página de resultados
-      for (var page in results) {
-        for (var item in page.items!) {
-          if (item is AlbumSimple) {
-            // Obtener el nombre del álbum en minúsculas para comparación
-            String albumName = '';
-            if (item.name != null) {
-              albumName = item.name!.toLowerCase();
-            }
-            
-            // Filtro 1: Rechazar si contiene palabras de compilación
-            final hasExcludedKeyword = excludeKeywords.any((keyword) => 
-              albumName.contains(keyword)
-            );
-            
-            // Filtro 2: Debe contener palabras que indiquen que es un OST oficial
-            final isSoundtrack = albumName.contains('soundtrack') || 
-                                 albumName.contains('ost') || 
-                                 albumName.contains('score') ||
-                                 albumName.contains('original');
-            
-            // Solo agregar si pasa ambos filtros
-            if (!hasExcludedKeyword && isSoundtrack) {
-              final model = SpotifySoundtrackModel(album: item);
-              soundtracks.add(model.toEntity());
-              
-              // Si ya tenemos suficientes, dejar de procesar
-              if (soundtracks.length >= limit) {
-                break;
-              }
-            }
-          }
+      for (var itemJson in albumsData) {
+        // Convertir JSON a AlbumSimple usando el modelo de la librería
+        final item = AlbumSimple.fromJson(itemJson);
+        
+        // Obtener el nombre del álbum en minúsculas para comparación
+        String albumName = '';
+        if (item.name != null) {
+          albumName = item.name!.toLowerCase();
         }
         
-        // Si ya tenemos suficientes, dejar de procesar páginas
-        if (soundtracks.length >= limit) {
-          break;
+        // Rechazar si contiene palabras de compilación o covers
+        final hasExcludedKeyword = excludeKeywords.any((keyword) => 
+          albumName.contains(keyword)
+        );
+        
+        // Debe contener palabras que indiquen que es un OST oficial
+        // O contener "music from" que es común
+        final isSoundtrack = albumName.contains('soundtrack') || 
+                             albumName.contains('ost') || 
+                             albumName.contains('score') ||
+                             albumName.contains('original') ||
+                             albumName.contains('music from') ||
+                             albumName.contains('game');
+        
+        // Solo agregar si pasa ambos filtros
+        if (!hasExcludedKeyword && isSoundtrack) {
+          final model = SpotifySoundtrackModel(album: item);
+          soundtracks.add(model.toEntity());
         }
       }
       
-      // Asignar resultados si todo fue bien
+      // Asignar resultados
       result = soundtracks;
       
     } catch (e) {
       // En caso de error, result ya está inicializado como lista vacía
+      // print('Error searching soundtracks: $e');
     }
     
     return result;

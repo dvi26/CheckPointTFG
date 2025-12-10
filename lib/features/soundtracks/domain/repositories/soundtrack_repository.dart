@@ -10,4 +10,7 @@ abstract class SoundtrackRepository {
   
   /// Obtiene un soundtrack completo por su ID de Spotify
   Future<Soundtrack?> getSoundtrackById(String spotifyId, {String? gameName, int? gameId});
+
+  /// Busca soundtracks por nombre 
+  Future<List<Soundtrack>> searchSoundtracks(String query, {int limit = 20, int offset = 0});
 }

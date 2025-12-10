@@ -20,6 +20,13 @@
    - 3.4. [Modelo de Casos de Uso](#34-modelo-de-casos-de-uso)
    - 3.5. [Interfaces de Usuario](#35-interfaces-de-usuario)
 
+4. [Diseño de Sistemas de Información (DSI)](#4-diseño-de-sistemas-de-información-dsi)
+   - 4.1. [Diseño de la Arquitectura del Sistema](#41-diseño-de-la-arquitectura-del-sistema)
+   - 4.2. [Modelo de Clases de Diseño](#42-modelo-de-clases-de-diseño)
+   - 4.3. [Diseño de la Interfaz de Usuario](#43-diseño-de-la-interfaz-de-usuario)
+   - 4.4. [Modelo Físico de Datos](#44-modelo-físico-de-datos)
+   - 4.5. [Plan de Pruebas](#45-plan-de-pruebas)
+
 ---
 
 ## 1. Estudio de Viabilidad del Sistema (EVS)
@@ -215,3 +222,88 @@ La interfaz se ha diseñado para ser intuitiva y familiar (patrones estándar de
 *   **Navegación:** Barra de navegación inferior (BottomNavigationBar) persistente para cambio rápido entre secciones principales.
 
 ---
+
+## 4. Diseño de Sistemas de Información (DSI)
+
+### 4.1. Diseño de la Arquitectura del Sistema
+
+#### 4.1.1. Patrón Arquitectónico
+El sistema sigue una arquitectura por capas basada en **Clean Architecture**, dividiendo el código en tres capas concéntricas de dependencia:
+
+1.  **Presentation Layer (Capa de Presentación):**
+    *   Contiene la UI (Widgets, Pages) y la gestión de estado (Controllers).
+    *   Es la única capa que conoce a Flutter.
+    *   Se comunica con la capa de Dominio a través de Casos de Uso (simplificado a Repositorios en este MVP).
+2.  **Domain Layer (Capa de Dominio):**
+    *   Contiene las Entidades (Objetos de negocio puros) y las Interfaces de los Repositorios.
+    *   Es totalmente independiente de librerías externas o frameworks.
+3.  **Data Layer (Capa de Datos):**
+    *   Implementa las interfaces de los Repositorios.
+    *   Gestiona las fuentes de datos (APIs REST, Firebase, Caché local).
+    *   Utiliza Modelos (DTOs) para parsear las respuestas JSON y convertirlas a Entidades.
+
+#### 4.1.2. Flujo de Datos
+El flujo de datos es unidireccional y reactivo:
+`UI (View) -> Controller (Provider) -> Repository Interface -> Repository Implementation -> Data Source (API/DB)`
+
+### 4.2. Modelo de Clases de Diseño
+
+#### 4.2.1. Clases Principales (Feature: Games)
+*   **Game (Entity):** Define la estructura pura de un videojuego.
+*   **GameController:** Gestiona la lista de `_popularGames` y `_searchResults`. Implementa lógica de caché para no recargar datos innecesariamente al cambiar de pestaña.
+*   **GameRepositoryImpl:** Implementa `GameRepository`. Se encarga de llamar a `IgdbClient` y mapear los `GameModel` a `Game`.
+*   **IgdbClient:** Gestiona la autenticación OAuth con Twitch y realiza peticiones HTTP crudas.
+
+#### 4.2.2. Clases Principales (Feature: Soundtracks)
+*   **Soundtrack (Entity):** Representa un álbum musical.
+*   **SoundtrackController:** Gestiona `_popularSoundtracks` y la lógica de selección.
+*   **SoundtrackRepositoryImpl:** Coordina la búsqueda entre IGDB (para obtener el nombre exacto del juego) y Spotify (para buscar el álbum).
+
+#### 4.2.3. Widgets Reutilizables
+*   **DetailHeaderImage:** Componente visual para las cabeceras de detalle. Gestiona la carga de imágenes de alta resolución y muestra un placeholder si falla.
+*   **GameCard / SoundtrackCard:** Tarjetas estandarizadas para los listados horizontales.
+
+### 4.3. Diseño de la Interfaz de Usuario
+
+#### 4.3.1. Mapa de Navegación
+*   **Nivel 0:** WelcomePage (Login / Registro / Invitado)
+*   **Nivel 1 (Home):**
+    *   Tab Inicio (Feed)
+    *   Tab Buscar
+    *   Tab Biblioteca (Solo auth)
+    *   Tab Perfil (Solo auth)
+*   **Nivel 2 (Detalle):**
+    *   GameDetailPage (Detalle de juego)
+    *   SoundtrackDetailPage (Detalle de BSO)
+
+#### 4.3.2. Diseño Visual
+*   **Tema:** Oscuro (Dark Mode) por defecto para reducir fatiga visual y resaltar las carátulas.
+*   **Color Primario:** Violeta (`#9B5CFF`) para acciones principales.
+*   **Tipografía:** Material Design standard.
+
+### 4.4. Modelo Físico de Datos (Firebase Firestore)
+
+La base de datos NoSQL se estructura en una colección principal de usuarios, donde cada usuario tiene su propia subcolección de juegos guardados.
+
+*   **Colección:** `users`
+    *   **Documento:** `{userId}` (ID único de autenticación)
+        *   *Campos:* `email`, `displayName`, `photoUrl`, `createdAt`
+        *   **Subcolección:** `games`
+            *   **Documento:** `{gameId}` (ID de IGDB)
+                *   *Campos:*
+                    *   `name`: String
+                    *   `coverUrl`: String
+                    *   `addedAt`: Timestamp
+                    *   `status`: String (ej. "played", "wishlist")
+
+### 4.5. Plan de Pruebas
+
+#### 4.5.1. Estrategia
+Se ha priorizado el testing manual exploratorio durante el desarrollo, complementado con tests de widgets básicos.
+
+#### 4.5.2. Casos de Prueba Críticos
+1.  **Auth:** Verificar flujo completo de Registro -> Login -> Logout.
+2.  **Persistencia:** Verificar que la sesión se mantiene al cerrar y abrir la app.
+3.  **API:** Verificar manejo de errores cuando no hay internet (debe mostrar mensaje, no crashear).
+4.  **Navegación:** Verificar que al cambiar de tabs en Home no se recargan los datos (optimización implementada).
+5.  **Enlaces:** Verificar que los botones de "Escuchar en Spotify" abren la app externa correctamente.

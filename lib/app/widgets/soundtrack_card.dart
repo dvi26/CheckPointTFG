@@ -12,6 +12,9 @@ class SoundtrackCard extends StatelessWidget {
     this.gameName,
     this.gameId,
     this.composer,
+    this.width = 160,
+    this.imageHeight = 130,
+    this.margin = const EdgeInsets.only(right: 16),
   });
   
   final String spotifyId;
@@ -20,6 +23,9 @@ class SoundtrackCard extends StatelessWidget {
   final String? gameName;
   final int? gameId;
   final String? composer;
+  final double? width;
+  final double? imageHeight;
+  final EdgeInsetsGeometry? margin;
 
   /// Construye el texto del subtítulo: prioridad gameName, luego composer, o vacío
   String _buildSoundtrackSubtitle(String? gameName, String? composer) {
@@ -50,8 +56,8 @@ class SoundtrackCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     
     return Container(
-      width: 160,
-      margin: const EdgeInsets.only(right: 16),
+      width: width,
+      margin: margin,
       child: InkWell(
         onTap: () {
           Navigator.of(context).pushNamed(
@@ -68,7 +74,8 @@ class SoundtrackCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 130,
+              height: imageHeight,
+              width: width,
               decoration: BoxDecoration(
                 color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
@@ -78,8 +85,8 @@ class SoundtrackCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       child: CachedNetworkImage(
                         imageUrl: coverUrl!,
-                        width: 160,
-                        height: 130,
+                        width: width,
+                        height: imageHeight,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Center(
                           child: CircularProgressIndicator(
@@ -128,4 +135,3 @@ class SoundtrackCard extends StatelessWidget {
     );
   }
 }
-
