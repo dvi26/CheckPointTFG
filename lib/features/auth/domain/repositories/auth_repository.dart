@@ -37,4 +37,10 @@ abstract class AuthRepository {
   /// Retorna void si todo va bien.
   /// Lanza excepción si hay error (ej: usuario no autenticado).
   Future<void> updateDisplayName(String displayName);
+
+  /// Inicia sesión con Google.
+  /// 
+  /// Retorna el usuario autenticado si todo va bien.
+  /// Lanza excepción si hay error o si el usuario cancela.
+  Future<AuthUser> signInWithGoogle();
 }

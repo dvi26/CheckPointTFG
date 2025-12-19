@@ -69,10 +69,8 @@ class GameController extends ChangeNotifier {
     try {
       // Usamos el límite por defecto del repositorio
       _popularGames = await _repository.getPopularGames();
-      // print('✅ Cargados ${_popularGames.length} juegos populares'); 
     } catch (e) {
       _error = 'Error cargando juegos: $e';
-      //print('❌ $_error'); 
     } finally {
       _setLoading(false);
     }
@@ -151,7 +149,6 @@ class GameController extends ChangeNotifier {
     } catch (e) {
       // Si falla la paginación, solo mostramos en consola o un snackbar en UI, 
       // pero no borramos los resultados existentes.
-      // print('Error cargando más resultados: $e');
     } finally {
       _isLoadingMore = false;
       notifyListeners();
@@ -166,10 +163,8 @@ class GameController extends ChangeNotifier {
 
     try {
       _selectedGame = await _repository.getGameById(gameId);
-      // print('✅ Cargado juego: ${_selectedGame?.name}');
     } catch (e) {
       _error = 'Error cargando detalles del juego: $e';
-      // print('❌ $_error');
     } finally {
       _setLoading(false);
     }

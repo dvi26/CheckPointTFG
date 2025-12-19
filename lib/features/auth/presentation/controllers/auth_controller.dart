@@ -73,6 +73,27 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    _error = '';
+    _setLoading(true);
+    
+    try {
+      await _authRepository.signInWithGoogle();
+      _error = '';
+    } on FirebaseAuthException catch (e) {
+      _error = _authErrorController(e);
+    } catch (e) {
+      // Capturar cancelaciones o errores generales
+      if (e.toString().contains('cancelado')) {
+        _error = ''; // No mostrar error si el usuario canceló
+      } else {
+        _error = 'Error al iniciar sesión con Google.';
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> signOut() async {
     _setLoading(true);
     _error = '';
@@ -138,6 +159,12 @@ class AuthController extends ChangeNotifier {
         break;
       case 'too-many-requests':
         message = 'Demasiados intentos. Prueba más tarde.';
+        break;
+      case 'account-exists-with-different-credential':
+        message = 'Ya existe una cuenta con este email.';
+        break;
+      case 'invalid-credential':
+        message = 'Credenciales de Google no válidas.';
         break;
       default:
         message = 'Error: ${e.code}.';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:checkpoint/app/router.dart';
 import 'package:provider/provider.dart';
 import 'package:checkpoint/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:checkpoint/app/widgets/google_button.dart';
 
 /// Pantalla de inicio de sesión.
 class LoginPage extends StatefulWidget {
@@ -152,6 +153,26 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    if (!_isLoading) {
+      final auth = context.read<AuthController>();
+      setState(() => _isLoading = true);
+      await auth.signInWithGoogle();
+      
+      if (mounted) {
+        setState(() => _isLoading = false);
+        
+        final err = context.read<AuthController>().error;
+        if (err.isEmpty && mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRouter.home,
+            (route) => false,
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -289,6 +310,32 @@ class _LoginPageState extends State<LoginPage> {
                   onPressed: () =>
                       Navigator.of(context).pushReplacementNamed(AppRouter.register),
                   child: const Text('Crear cuenta'),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Divider
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'O continúa con',
+                        style: text.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Google button
+                GoogleButton(
+                  onPressed: _isLoading ? () {} : _signInWithGoogle,
                 ),
 
                 const SizedBox(height: 24),

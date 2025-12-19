@@ -37,7 +37,6 @@ class IgdbClient {
         
         // Debug: Mostrar cuántos días es válido el token
         // final days = expiresIn ~/ 86400;
-        // print('✅ IGDB: Autenticación exitosa. Token válido por $days días');
       } else {
         throw Exception('Error autenticando con Twitch: ${response.statusCode}');
       }

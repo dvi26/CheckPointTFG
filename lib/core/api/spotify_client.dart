@@ -22,11 +22,10 @@ class SpotifyClientService {
     // Crear cliente con autenticación automática
     _spotifyApi = SpotifyApi(credentials);
     
-    // print('✅ Spotify: Cliente autenticado correctamente'); // Debug
     return _spotifyApi!;
   }
 
-  /// Reinicia el cliente (útil si cambian las credenciales)
+  /// Reinicia el cliente 
   static void reset() {
     _spotifyApi = null;
   }

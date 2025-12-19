@@ -115,7 +115,6 @@ class GameRepositoryImpl implements GameRepository {
       // Si falla la API y no teníamos caché, inicializamos vacío para no romper la app
       _platformCache ??= {};
       // Log error o manejar silenciosamente
-      print('Error cargando plataformas: $e');
     }
   }
 

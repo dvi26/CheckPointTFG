@@ -19,9 +19,15 @@ class GoogleButton extends StatelessWidget {
       height: 52,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: Icon(
-          Icons.account_circle,
-          color: cs.onSurface,
+        icon: Image.network(
+          'https://www.google.com/favicon.ico',
+          width: 20,
+          height: 20,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.g_mobiledata,
+            size: 24,
+            color: cs.onSurface,
+          ),
         ),
         label: const Text('Continuar con Google'),
         style: OutlinedButton.styleFrom(
@@ -35,4 +41,3 @@ class GoogleButton extends StatelessWidget {
     );
   }
 }
-

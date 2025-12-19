@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:checkpoint/app/router.dart';
-import 'package:checkpoint/app/widgets/widgets.dart';
 
 /// Pantalla de bienvenida.
 ///
 /// Presenta la marca y tres acciones principales:
-/// 1) Registrarse  2) Iniciar sesión  3) Continuar sin cuenta (invitado).
+///  Registrarse, Iniciar sesión, Continuar sin cuenta 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
@@ -93,47 +92,7 @@ class WelcomePage extends StatelessWidget {
                 child: const Text('Continuar sin cuenta'),
               ),
 
-              const SizedBox(height: 20),
-
-              /// Separador.
-              Opacity(
-                opacity: .5,
-                child: Container(
-                  height: 1,
-                  color: const Color(0xFF262732),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Opacity(
-                opacity: .7,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              /// Botón de iniciar con Google.
-              GoogleButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Google: conectando... (no implementado)',
-                      ),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -141,4 +100,3 @@ class WelcomePage extends StatelessWidget {
     );
   }
 }
-
