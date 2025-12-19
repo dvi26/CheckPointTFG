@@ -1,4 +1,4 @@
-/// Helper para mapear IDs de plataformas de IGDB a nombres en español.
+/// Helper para mapear IDs de plataformas de IGDB 
 /// 
 /// Este archivo gestiona el mapeo de plataformas, permitiendo una lista dinámica
 /// actualizada desde la API de IGDB.

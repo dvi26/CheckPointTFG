@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -88,6 +89,11 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    // Cerrar sesión de Google Sign-In (limpia datos locales)
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    await googleSignIn.signOut();
+    
+    // Cerrar sesión de Firebase
     await _firebaseAuth.signOut();
   }
 
@@ -106,6 +112,42 @@ class FirebaseAuthRepository implements AuthRepository {
     
     // Recargar el usuario para que los cambios se reflejen
     await currentUser.reload();
+  }
+
+  @override
+  Future<AuthUser> signInWithGoogle() async {
+    AuthUser result;
+    
+    // Iniciar flujo de Google Sign In
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    
+    // Usuario canceló el login
+    if (googleUser == null) {
+      throw Exception('Inicio de sesión cancelado');
+    }
+    
+    // Obtener credenciales de autenticación
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    
+    // Crear credencial de Firebase
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+    
+    // Autenticar con Firebase
+    final userCredential = await _firebaseAuth.signInWithCredential(credential);
+    
+    // Verificar que obtuvimos el usuario
+    if (userCredential.user == null) {
+      throw Exception('Error al autenticar con Google');
+    }
+    
+    // Convertir a nuestra entidad
+    result = _userFromFirebase(userCredential.user!);
+    
+    return result;
   }
 
   AuthUser _userFromFirebase(User firebaseUser) {

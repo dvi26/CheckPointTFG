@@ -27,7 +27,6 @@ class GameCard extends StatelessWidget {
   final double? imageHeight;
   final EdgeInsetsGeometry? margin;
 
-  /// Construye el texto del subtítulo: "Género • Año", "Género", "Año" o ""
   String _buildGameSubtitle(List<String> genres, int? year) {
     String subtitle = '';
     

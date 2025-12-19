@@ -64,10 +64,8 @@ class SoundtrackController extends ChangeNotifier {
 
     try {
       _popularSoundtracks = await _repository.getPopularSoundtracks(limit: 20);
-      // print('✅ Cargados ${_popularSoundtracks.length} soundtracks populares');
     } catch (e) {
       _error = 'Error cargando soundtracks: $e';
-      // print('❌ $_error'); 
     } finally {
       _setLoading(false);
     }
@@ -179,10 +177,8 @@ class SoundtrackController extends ChangeNotifier {
         gameName: gameName,
         gameId: gameId,
       );
-      // print('✅ Cargado soundtrack: ${_selectedSoundtrack?.name}');
     } catch (e) {
       _error = 'Error cargando detalles del soundtrack: $e';
-      // print('❌ $_error');
     } finally {
       _setLoading(false);
     }

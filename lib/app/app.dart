@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import '../core/api/igdb_client.dart';
+import '../core/api/musicbrainz_client.dart';
 import '../features/auth/data/repositories/firebase_auth_repository.dart';
 import '../features/auth/presentation/controllers/auth_controller.dart';
 import '../features/games/data/repositories/game_repository_impl.dart';
 import '../features/games/presentation/controllers/game_controller.dart';
+import '../features/soundtracks/data/repositories/musicbrainz_repository_impl.dart';
 import '../features/soundtracks/data/repositories/soundtrack_repository_impl.dart';
 import '../features/soundtracks/data/repositories/spotify_repository_impl.dart';
 import '../features/soundtracks/presentation/controllers/soundtrack_controller.dart';
@@ -34,9 +36,15 @@ class App extends StatelessWidget {
     final igdbClient = IgdbClient();
     final gameRepository = GameRepositoryImpl(igdbClient);
 
-    // Repositorios de soundtracks (IGDB + Spotify)
+    // Repositorios de soundtracks (IGDB + Spotify + MusicBrainz)
     final spotifyRepository = SpotifyRepositoryImpl();
-    final soundtrackRepository = SoundtrackRepositoryImpl(igdbClient, spotifyRepository);
+    final musicBrainzClient = MusicBrainzClient();
+    final musicBrainzRepository = MusicBrainzRepositoryImpl(musicBrainzClient);
+    final soundtrackRepository = SoundtrackRepositoryImpl(
+      igdbClient, 
+      spotifyRepository,
+      musicBrainzRepository,
+    );
     
     return MultiProvider(
       // Lista de controladores para la app.
